@@ -38,4 +38,64 @@ import copy
 import MalmoPython
 
 
-class SimpleMalmoEnvironment():
+class SimpleMalmoEnvironment:
+
+    def __init__(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.init')
+        self.actions = ["move 1", "turn 1", "turn -1", "attack 1", "discardCurrentItem"]
+        self.landmark_types = ["redstone_block", "emerald_block", "lapis_block", "cobblestone", "gold_block",
+                               "quartz_block"]
+        self.size = [7, 7]
+
+    def generate_malmo_environment_xml(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.generateMalmoEnvironmentXML')
+        xml_string = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+        <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <About>
+                <Summary>Simple Malmo Environment</Summary>
+            </About>
+            <ServerSection>
+                <ServerInitialConditions>
+                    <Time><StartTime>1</StartTime></Time>
+                    <Weather>clear</Weather>
+                </ServerInitialConditions>
+                <ServerHandlers>
+                    <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" forceReset="true" />
+                <DrawingDecorator>
+                    <!-- coordinates for cuboid are inclusive -->
+                    <DrawCuboid x1="0" y1="46" z1="0" x2="''' + str(self.size[0]) + '''" y2="50" z2="''' + str(
+                    self.size[1]) + '''" type="air" />            <!-- limits of our arena -->
+                    <DrawCuboid x1="0" y1="45" z1="0" x2="''' + str(self.size[1]) + '''" y2="45" z2="''' + str(
+                    self.size[1]) + '''" type="sandstone" />      <!-- floor of the arena -->
+                    ''' + self.drawLandmarks() + self.drawObstacles() + '''
+                </DrawingDecorator>
+                <ServerQuitFromTimeUp timeLimitMs="720000"/>
+                <ServerQuitWhenAnyAgentFinishes/>
+                </ServerHandlers>
+            </ServerSection>
+            <AgentSection mode="Survival">
+                <Name>ButterFingers</Name>
+                <AgentStart>
+                    <Placement x="4" y="46.0" z="2" pitch="15" yaw="0"/>
+                    <Inventory>
+                    </Inventory>
+                </AgentStart>
+                <AgentHandlers>
+                    <DiscreteMovementCommands/>
+                    <MissionQuitCommands/>
+                    <InventoryCommands/>
+                    <ObservationFromFullStats/>
+                    <ObservationFromRay/>
+                    <ObservationFromFullInventory/>
+                    <VideoProducer want_depth="false" viewpoint="1">
+                        <Width>640</Width>
+                        <Height>480</Height>
+                    </VideoProducer>
+                    <RewardForSendingCommand reward="-1" />
+                </AgentHandlers>
+                </AgentSection>
+        </Mission>'''
+
+        log.debug("Final mission XML String: %s", xml_string)
+
+        return xml_string
