@@ -62,8 +62,13 @@ class SimpleMalmoEnvironment:
         self.mission = MalmoPython.MissionSpec(self.mission_xml, True)
         log.info("Loaded mission XML")
 
-        self.initial_location = 0
+        # observation stuff that needs to be passed to the learning algorithm
+        self.item_location = 0
+        self.current_agent_location = []
         self.destination = 0
+        self.last_observation = None
+        self.direction = 0
+        self.is_get_completed = False
 
     def generate_malmo_environment_xml(self):
         log = logging.getLogger('SimpleMalmoEnvironment.generateMalmoEnvironmentXML')
@@ -204,10 +209,70 @@ class SimpleMalmoEnvironment:
         log.debug("Obstacle string: %s", obstacle_string)
         return obstacle_string
 
+    def makeObservation(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.makeObservation')
+
+        target_item = self.landmark_types[self.destination]
+
+        # get the state from malmo
+        world_state = malmo_env.getWorldState()
+
+        # wait for first valid observation to be received
+        while True:
+            time.sleep(0.1)
+            world_state = malmo_env.getWorldState()
+
+            for error in world_state.errors:
+                self.logger.error("Error: %s" % error.text)
+            log.debug("Received: %s, Num. observations: %d", world_state, len(world_state.observations))
+            if world_state.is_mission_running and len(world_state.observations) > 0 \
+                    and not world_state.observations[-1].text == "{}":
+                observation = json.loads(world_state.observations[-1].text)
+                if not u'XPos' in observation or not u'ZPos' in observation or not u'Yaw' in observation \
+                        or not u'LineOfSight' in observation:
+                    # hack to force an observation; sometimes the world_state.observations may not have LineOfSight
+                    # this line below forces the environment to return an observation.
+                    malmo_env.sendCommand("jump 0")
+                    log.error("Incomplete observation received: %s" % observation)
+                else:
+                    break
+            if not world_state.is_mission_running:
+                break
+
+        if not world_state.is_mission_running:
+            log.debug("Mission completed: outcome : need to add outcome :")
+
+        current_r = 0
+        for reward in world_state.rewards:
+            current_r += reward.getValue()
+
+        log.debug("Received world state: %s", world_state)
+
+        # observation is obtained from malmo as a json string; convert that to dict first
+        observation = json.loads(world_state.observations[-1].text)
+        self.last_observation = copy.deepcopy(observation)
+        log.debug("Received observation %s", observation)
+
+        x, y = int(observation[u'XPos']), int(observation[u'ZPos'])
+        self.direction = int(observation[u'Yaw'])/90
+
+        if not self.is_get_completed:
+            self.is_get_completed = self.checkInventory(observation, target_item)
+
+            if self.is_get_completed:
+                self.item_location = len(self.landmarks)
+
+        distance = float(observation[u'LineOfSight'][u'distance'])
+
+        terminal = 0 if world_state.is_mission_running else 1
+
+        return observation, current_r, terminal
+
     def reset(self):
         log = logging.getLogger('SimpleMalmoEnvironment.reset')
         self.mission.startAt(1, 46, 1)
         self.mission.setViewpoint(1)
+        self.current_agent_location = [1, 1]
 
         # set mission variables - landmarks, source and destination
         landmarks = copy.deepcopy(self.landmarks)
@@ -215,7 +280,7 @@ class SimpleMalmoEnvironment:
         remaining_landmarks = [x for x in landmarks if x != source_loc]  # tentative destinations are any other landmark
         destination = random.choice(remaining_landmarks)  # now randomly choose the destination from above list
 
-        self.initial_location = landmarks.index(source_loc)
+        self.item_location = landmarks.index(source_loc)
         self.destination = landmarks.index(destination)
 
         self.mission.drawBlock(source_loc[0], 47, source_loc[1], self.landmark_types[self.destination])
