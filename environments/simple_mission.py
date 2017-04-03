@@ -46,6 +46,7 @@ class SimpleMalmoEnvironment:
         self.landmark_types = ["redstone_block", "emerald_block", "lapis_block", "cobblestone", "gold_block",
                                "quartz_block"]
         self.size = [7, 7]
+        self.landmarks = [[1, 2], [2, 5], [5, 6], [5, 2]]
 
     def generate_malmo_environment_xml(self):
         log = logging.getLogger('SimpleMalmoEnvironment.generateMalmoEnvironmentXML')
@@ -67,7 +68,7 @@ class SimpleMalmoEnvironment:
                     self.size[1]) + '''" type="air" />            <!-- limits of our arena -->
                     <DrawCuboid x1="0" y1="45" z1="0" x2="''' + str(self.size[1]) + '''" y2="45" z2="''' + str(
                     self.size[1]) + '''" type="sandstone" />      <!-- floor of the arena -->
-                    ''' + self.drawLandmarks() + self.drawObstacles() + '''
+                    ''' + self.draw_landmarks() + self.drawObstacles() + '''
                 </DrawingDecorator>
                 <ServerQuitFromTimeUp timeLimitMs="720000"/>
                 <ServerQuitWhenAnyAgentFinishes/>
@@ -99,3 +100,19 @@ class SimpleMalmoEnvironment:
         log.debug("Final mission XML String: %s", xml_string)
 
         return xml_string
+
+    def draw_landmarks(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.drawlandmarks')
+
+        landmarks = self.landmarks
+
+        log.debug("Input landmarks: %s", landmarks)
+
+        landmark_xml = '''<!-- draw landmarks -->'''
+
+        for i, l in enumerate(landmarks):
+            x, z = l
+            landmark_xml += '''<DrawBlock x="''' + str(x) + '''" y="45" z="''' + str(z) + '''" type="''' + self.landmark_types[i % len(self.landmark_typesn)] + '''"/>'''
+
+        return landmark_xml
+
