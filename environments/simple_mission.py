@@ -249,3 +249,18 @@ class SimpleMalmoEnvironment:
         return_observation, reward, terminal = self.makeObservation()
 
         return return_observation
+
+    def env_start(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.envStart')
+
+        # need to quit before you start a new mission, else it fails below with runtime error
+        log.debug("Sending quit command to restart the mission")
+        malmo_env.sendCommand("quit")
+
+        self.reset()
+        log.info("Environment started")
+
+        return_observation, reward, terminal = self.makeObservation()
+        log.debug("First observation: %s, %f, %d", return_observation, reward, terminal)
+
+        return return_observation
