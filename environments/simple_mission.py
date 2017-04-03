@@ -103,7 +103,7 @@ class SimpleMalmoEnvironment:
         return xml_string
 
     def draw_landmarks(self):
-        log = logging.getLogger('SimpleMalmoEnvironment.drawlandmarks')
+        log = logging.getLogger('SimpleMalmoEnvironment.drawLandmarks')
 
         landmarks = self.landmarks
 
@@ -113,23 +113,79 @@ class SimpleMalmoEnvironment:
 
         for i, l in enumerate(landmarks):
             x, z = l
-            landmark_xml += '''<DrawBlock x="''' + str(x) + '''" y="45" z="''' + str(z) + '''" type="''' + self.landmark_types[i % len(self.landmark_typesn)] + '''"/>'''
+            landmark_xml += '''<DrawBlock x="''' + str(x) + '''" y="45" z="''' + str(z) + '''" type="''' + \
+                            self.landmark_types[i % len(self.landmark_typesn)] + '''"/>'''
 
         return landmark_xml
 
     def draw_obstacles(self):
-        log = logging.getLogger('SimpleMalmoEnvironment.drawobstacles')
+        log = logging.getLogger('SimpleMalmoEnvironment.drawObstacles')
 
-        log.debug("Input walls: %s", walls)
+        log.debug("Input walls: %s", self.walls)
 
         obstacle_xml = '''<!-- draw the obstacles -->'''
         for w in self.walls:
             log.debug("Adding obstacle: %s", w)
             x, y, direction = list(w)
-            obstacle_string = self.drawObstacle(x, y, direction)
+            obstacle_string = self.draw_obstacle(x, y, direction)
             log.debug("Obstacle string received: %s", obstacle_string)
             obstacle_xml = obstacle_xml + obstacle_string
 
         log.debug("Obstacle string obtained: %s", obstacle_xml)
 
         return obstacle_xml
+
+    def draw_obstacle(self, x, y, direction):
+        _x, _y = x, y
+
+        log = logging.getLogger('SimpleMalmoEnvironment.drawObstacle')
+
+        log.debug("Input x, y, d: %d, %d, %d", x, y, direction)
+
+        cell_index = y * self.size[0] + x
+
+        log.info("Adding walls [x, y, direction] = [%d, %d, %d]; index: %d", x, y, direction, cell_index)
+
+        if direction == 3 and x == 0:
+            log.info("No wall added")
+            log.debug("Trying to add wall on the left boundary.")
+            return ""
+        if direction == 2 and x == self.size[0] - 1:
+            log.info("No wall added")
+            log.debug("Trying to add wall on the right boundary.")
+            return ""
+        if direction == 1 and y == 0:
+            log.info("No wall added")
+            log.debug("Trying to add wall on the bottom boundary.")
+            return ""
+        if direction == 0 and y == self.size[1] - 1:
+            log.info("No wall added")
+            log.debug("Trying to add wall on the top boundary.")
+            return ""
+
+        if direction == 0:  # north bit value: 0001
+            _y = y + 1
+
+        elif direction == 1:  # south bit value: 0010
+            _y = y - 1
+
+        elif direction == 2:  # east bit value: 0100
+            _x = x + 1
+
+        elif direction == 3:  # west bit value: 1000
+            _x = x - 1
+
+        # clip the values between the max and min environment size.
+        _x = 0 if _x < 0 else self.size[0] if _x > self.size[0] else _x
+        _y = 0 if _y < 0 else self.size[0] if _y > self.size[0] else _y
+
+        obstacle_string = '''<DrawBlock x="''' + str(_x) + '''" y="45" z="''' + str(_y) + '''"  type="bedrock" />
+                    <DrawBlock x="''' + str(_x) + '''" y="46" z="''' + str(_y) + '''"  type="bedrock" />
+                    <DrawBlock x="''' + str(_x) + '''" y="47" z="''' + str(_y) + '''"  type="bedrock" />
+                    <DrawBlock x="''' + str(_x) + '''" y="48" z="''' + str(_y) + '''"  type="beacon" />
+                    '''
+
+        log.debug("Obstacle string: %s", obstacle_string)
+        return obstacle_string
+
+    
