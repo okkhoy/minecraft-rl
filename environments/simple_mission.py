@@ -47,6 +47,7 @@ class SimpleMalmoEnvironment:
                                "quartz_block"]
         self.size = [7, 7]
         self.landmarks = [[1, 2], [2, 5], [5, 6], [5, 2]]
+        self.walls = [[2, 2, 2], [3, 2, 2], [3, 3, 2], [4, 3, 2], [1, 4, 2], [2, 5, 2], [2, 6, 2]],
 
     def generate_malmo_environment_xml(self):
         log = logging.getLogger('SimpleMalmoEnvironment.generateMalmoEnvironmentXML')
@@ -68,7 +69,7 @@ class SimpleMalmoEnvironment:
                     self.size[1]) + '''" type="air" />            <!-- limits of our arena -->
                     <DrawCuboid x1="0" y1="45" z1="0" x2="''' + str(self.size[1]) + '''" y2="45" z2="''' + str(
                     self.size[1]) + '''" type="sandstone" />      <!-- floor of the arena -->
-                    ''' + self.draw_landmarks() + self.drawObstacles() + '''
+                    ''' + self.draw_landmarks() + self.draw_obstacles() + '''
                 </DrawingDecorator>
                 <ServerQuitFromTimeUp timeLimitMs="720000"/>
                 <ServerQuitWhenAnyAgentFinishes/>
@@ -116,3 +117,19 @@ class SimpleMalmoEnvironment:
 
         return landmark_xml
 
+    def draw_obstacles(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.drawobstacles')
+
+        log.debug("Input walls: %s", walls)
+
+        obstacle_xml = '''<!-- draw the obstacles -->'''
+        for w in self.walls:
+            log.debug("Adding obstacle: %s", w)
+            x, y, direction = list(w)
+            obstacle_string = self.drawObstacle(x, y, direction)
+            log.debug("Obstacle string received: %s", obstacle_string)
+            obstacle_xml = obstacle_xml + obstacle_string
+
+        log.debug("Obstacle string obtained: %s", obstacle_xml)
+
+        return obstacle_xml
