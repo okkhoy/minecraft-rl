@@ -38,16 +38,32 @@ import copy
 import MalmoPython
 
 
+malmo_env = MalmoPython.AgentHost()
+
 class SimpleMalmoEnvironment:
 
     def __init__(self):
         log = logging.getLogger('SimpleMalmoEnvironment.init')
+
+        # actions available for the agent
         self.actions = ["move 1", "turn 1", "turn -1", "attack 1", "discardCurrentItem"]
+
+        # mission elements: landmarks, size, landmark types, obstacles etc.,
         self.landmark_types = ["redstone_block", "emerald_block", "lapis_block", "cobblestone", "gold_block",
                                "quartz_block"]
         self.size = [7, 7]
         self.landmarks = [[1, 2], [2, 5], [5, 6], [5, 2]]
-        self.walls = [[2, 2, 2], [3, 2, 2], [3, 3, 2], [4, 3, 2], [1, 4, 2], [2, 5, 2], [2, 6, 2]],
+        self.obstacles = [[2, 2, 2], [3, 2, 2], [3, 3, 2], [4, 3, 2], [1, 4, 2], [2, 5, 2], [2, 6, 2]]
+
+        # mission related objects
+        self.mission_xml = self.generate_malmo_environment_xml()
+        log.debug("Obtained mission XML: \n %s", self.mission_xml)
+        self.mission_record = MalmoPython.MissionRecordSpec()
+        self.mission = MalmoPython.MissionSpec(self.mission_xml, True)
+        log.info("Loaded mission XML")
+
+        self.initial_location = 0
+        self.destination = 0
 
     def generate_malmo_environment_xml(self):
         log = logging.getLogger('SimpleMalmoEnvironment.generateMalmoEnvironmentXML')
@@ -121,10 +137,10 @@ class SimpleMalmoEnvironment:
     def draw_obstacles(self):
         log = logging.getLogger('SimpleMalmoEnvironment.drawObstacles')
 
-        log.debug("Input walls: %s", self.walls)
+        log.debug("Input walls: %s", self.obstacles)
 
         obstacle_xml = '''<!-- draw the obstacles -->'''
-        for w in self.walls:
+        for w in self.obstacles:
             log.debug("Adding obstacle: %s", w)
             x, y, direction = list(w)
             obstacle_string = self.draw_obstacle(x, y, direction)
@@ -188,4 +204,48 @@ class SimpleMalmoEnvironment:
         log.debug("Obstacle string: %s", obstacle_string)
         return obstacle_string
 
-    
+    def reset(self):
+        log = logging.getLogger('SimpleMalmoEnvironment.reset')
+        self.mission.startAt(1, 46, 1)
+        self.mission.setViewpoint(1)
+
+        # set mission variables - landmarks, source and destination
+        landmarks = copy.deepcopy(self.landmarks)
+        source_loc = random.choice(landmarks)  # first select the source to pick up from
+        remaining_landmarks = [x for x in landmarks if x != source_loc]  # tentative destinations are any other landmark
+        destination = random.choice(remaining_landmarks)  # now randomly choose the destination from above list
+
+        self.initial_location = landmarks.index(source_loc)
+        self.destination = landmarks.index(destination)
+
+        self.mission.drawBlock(source_loc[0], 47, source_loc[1], self.landmark_types[self.destination])
+
+        retries = 3
+        log.debug("Mission XML: \n %s", self.mission_xml)
+        for retry in range(retries):
+            try:
+                malmo_env.startMission(self.mission, self.mission_record)
+                time.sleep(2.5)
+
+                world_state = malmo_env.getWorldState()
+                if world_state.has_mission_begun:
+                    break
+            except RuntimeError as e:
+                if retry == retries - 1:
+                    log.error("Error starting mission. Max retries elapsed. Closing! %s", e.message)
+                    exit(1)
+                else:
+                    time.sleep(2.5)
+
+        world_state = malmo_env.getWorldState()
+
+        while not world_state.has_mission_begun:
+            log.debug("Waiting for mission to begin")
+            time.sleep(0.1)
+            world_state = malmo_env.getWorldState()
+            for error in world_state.errors:
+                log.error("Error: %s", error.text)
+
+        return_observation, reward, terminal = self.makeObservation()
+
+        return return_observation
