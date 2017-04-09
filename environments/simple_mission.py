@@ -29,16 +29,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+import collections
 import logging
-import numpy
 import json
 import random
 import time
 import copy
+
+from pprint import pformat
+
 import MalmoPython
 
 
 malmo_env = MalmoPython.AgentHost()
+list_compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
 
 class SimpleMalmoEnvironment:
 
@@ -46,12 +50,12 @@ class SimpleMalmoEnvironment:
         log = logging.getLogger('SimpleMalmoEnvironment.init')
 
         # actions available for the agent
-        self.actions = ["move 1", "turn 1", "turn -1", "attack 1", "discardCurrentItem"]
+        self.actions = ["move 1", "turn 1", "turn -1", "use 1"]
 
         # mission elements: landmarks, size, landmark types, obstacles etc.,
-        self.landmark_types = ["redstone_block", "emerald_block", "lapis_block", "cobblestone", "gold_block",
+        self.landmark_types = ["redstone_block", "emerald_block", "lapis_block", "gold_block", "cobblestone",
                                "quartz_block"]
-        self.size = [7, 7]
+        self.size = [6, 6]
         self.landmarks = [[1, 2], [2, 5], [5, 6], [5, 2]]
         self.obstacles = [[2, 2, 2], [3, 2, 2], [3, 3, 2], [4, 3, 2], [1, 4, 2], [2, 5, 2], [2, 6, 2]]
 
@@ -67,8 +71,11 @@ class SimpleMalmoEnvironment:
         self.current_agent_location = []
         self.destination = 0
         self.last_observation = None
+        self.last_action = ""
         self.direction = 0
         self.is_get_completed = False
+
+        log.debug("Verify experiment config:\n%s", pformat(self.__dict__))
 
     def generate_malmo_environment_xml(self):
         log = logging.getLogger('SimpleMalmoEnvironment.generateMalmoEnvironmentXML')
@@ -110,16 +117,17 @@ class SimpleMalmoEnvironment:
                     <ObservationFromFullStats/>
                     <ObservationFromRay/>
                     <ObservationFromFullInventory/>
+                    <ObservationFromDiscreteCell/>
                     <VideoProducer want_depth="false" viewpoint="1">
-                        <Width>640</Width>
-                        <Height>480</Height>
+                        <Width>480</Width>
+                        <Height>320</Height>
                     </VideoProducer>
                     <RewardForSendingCommand reward="-1" />
                 </AgentHandlers>
                 </AgentSection>
         </Mission>'''
 
-        log.debug("Final mission XML String: %s", xml_string)
+        log.debug("Final mission XML String: \n%s", xml_string)
 
         return xml_string
 
@@ -149,7 +157,6 @@ class SimpleMalmoEnvironment:
             log.debug("Adding obstacle: %s", w)
             x, y, direction = list(w)
             obstacle_string = self.draw_obstacle(x, y, direction)
-            log.debug("Obstacle string received: %s", obstacle_string)
             obstacle_xml = obstacle_xml + obstacle_string
 
         log.debug("Obstacle string obtained: %s", obstacle_xml)
@@ -162,10 +169,6 @@ class SimpleMalmoEnvironment:
         log = logging.getLogger('SimpleMalmoEnvironment.drawObstacle')
 
         log.debug("Input x, y, d: %d, %d, %d", x, y, direction)
-
-        cell_index = y * self.size[0] + x
-
-        log.info("Adding walls [x, y, direction] = [%d, %d, %d]; index: %d", x, y, direction, cell_index)
 
         if direction == 3 and x == 0:
             log.info("No wall added")
@@ -209,7 +212,7 @@ class SimpleMalmoEnvironment:
         log.debug("Obstacle string: %s", obstacle_string)
         return obstacle_string
 
-    def makeObservation(self):
+    def makeObservation(self, action_status=False):
         log = logging.getLogger('SimpleMalmoEnvironment.makeObservation')
 
         target_item = self.landmark_types[self.destination]
@@ -217,6 +220,7 @@ class SimpleMalmoEnvironment:
         # get the state from malmo
         world_state = malmo_env.getWorldState()
 
+        terminal = 0
         # wait for first valid observation to be received
         while True:
             time.sleep(0.1)
@@ -233,25 +237,24 @@ class SimpleMalmoEnvironment:
                     # hack to force an observation; sometimes the world_state.observations may not have LineOfSight
                     # this line below forces the environment to return an observation.
                     malmo_env.sendCommand("jump 0")
-                    log.error("Incomplete observation received: %s" % observation)
+                    log.error("Incomplete observation received: %s", pformat(observation))
                 else:
+                    self.last_observation = copy.deepcopy(observation)
                     break
             if not world_state.is_mission_running:
+                terminal = 1
                 break
 
         if not world_state.is_mission_running:
-            log.debug("Mission completed: outcome : need to add outcome :")
+            terminal = 1
+            log.warn("Malmo mission ended")
 
         current_r = 0
         for reward in world_state.rewards:
             current_r += reward.getValue()
 
         log.debug("Received world state: %s", world_state)
-
-        # observation is obtained from malmo as a json string; convert that to dict first
-        observation = json.loads(world_state.observations[-1].text)
-        self.last_observation = copy.deepcopy(observation)
-        log.debug("Received observation %s", observation)
+        log.debug("Received observation %s", pformat(observation))
 
         x, y = int(observation[u'XPos']), int(observation[u'ZPos'])
         self.direction = int(observation[u'Yaw'])/90
@@ -261,12 +264,23 @@ class SimpleMalmoEnvironment:
 
             if self.is_get_completed:
                 self.item_location = len(self.landmarks)
+                current_r += 11
+                log.debug("Get successfully completed")
+        elif self.is_get_completed:
+            if "use" in self.last_action:
+                if action_status is True:
+                    current_r += 21
+                    log.debug("Put successfully completed")
+                    terminal = 1
+                else:
+                    current_r -= 10
+                    log.debug("Put failed")
 
         distance = float(observation[u'LineOfSight'][u'distance'])
+        return_observation = {"intobs": [x, y, self.direction, self.item_location, self.destination],
+                              "floatobs": [distance]}
 
-        terminal = 0 if world_state.is_mission_running else 1
-
-        return observation, current_r, terminal
+        return return_observation, current_r, terminal
 
     def reset(self):
         log = logging.getLogger('SimpleMalmoEnvironment.reset')
