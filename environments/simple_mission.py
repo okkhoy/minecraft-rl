@@ -289,20 +289,21 @@ class SimpleMalmoEnvironment:
         landmark_locations = [[l[0], l[1]] for l in self.landmarks]
 
         # select a random start location such that is is not one of the wall cells and not one of landmarks
-        x, y = random.randint(0, self.size[0] - 1), random.randint(0, self.size[1] - 1)
-        while [x, y] in obstacle_locations or [x, y] in landmark_locations:
-            x, y = random.randint(0, 6), random.randint(0, 6)
+        # x, y = random.randint(0, self.size[0] - 1), random.randint(0, self.size[1] - 1)
+        # while [x, y] in obstacle_locations or [x, y] in landmark_locations:
+        #     x, y = random.randint(0, 6), random.randint(0, 6)
 
-        self.mission.startAt(x, 46, y)
         self.mission.setViewpoint(1)
-
-        self.current_agent_location = [x, y]
 
         # set mission variables - landmarks, source and destination
         landmarks = copy.deepcopy(self.landmarks)
         source_loc = random.choice(landmarks)  # first select the source to pick up from
-        remaining_landmarks = [lm for lm in landmarks if lm != source_loc]  # tentative destinations are any other landmark
+        remaining_landmarks = [lm for lm in landmarks if lm != source_loc]  # tentative destinations are other landmarks
         destination = random.choice(remaining_landmarks)  # now randomly choose the destination from above list
+        agent_start_loc = random.choice(remaining_landmarks)  # start locations for agent; start loc != pick up source
+        x, y = agent_start_loc[0], agent_start_loc[1]
+        self.mission.startAt(x, 46, y)
+        self.current_agent_location = [x, y]
 
         self.item_location = landmarks.index(source_loc)
         self.destination = landmarks.index(destination)
