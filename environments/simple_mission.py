@@ -353,7 +353,7 @@ class SimpleMalmoEnvironment:
     def env_step(self, thisAction):
         log = logging.getLogger('SimpleMalmoEnvironment.envStep')
 
-        log.debug("Received action: %s", thisAction)
+        log.debug("Received action: %s", str(thisAction))
 
         malmo_action = self.actions[thisAction]
 
@@ -440,4 +440,22 @@ class SimpleMalmoEnvironment:
 
 def main():
     malmo = SimpleMalmoEnvironment()
-    
+
+    n_steps_per_ep = 1500
+    n_episodes = 100
+    n_runs = 10
+
+    for r in xrange(n_runs):
+        for e in xrange(n_episodes):
+            # start the episode
+            malmo_env.sendCommand("quit")
+            malmo.env_start()
+
+            terminal = False
+            i = 0
+            actions = range(len(malmo.actions))
+            # loop until episode ends
+            while i < n_steps_per_ep and not terminal:
+                i += 1
+                action = random.choice(actions)
+                malmo.env_step(action)
