@@ -458,5 +458,8 @@ def main():
             # loop until episode ends
             while i < n_steps_per_ep and not terminal:
                 i += 1
-                action = random.choice(actions)
+                if not malmo.is_get_completed:
+                    action = random.choice(actions)
+                else:
+                    action = random.choice(actions[0:3])
                 malmo.env_step(action)
