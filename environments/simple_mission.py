@@ -260,7 +260,7 @@ class SimpleMalmoEnvironment:
         self.direction = int(observation[u'Yaw'])/90
 
         if not self.is_get_completed:
-            self.is_get_completed = self.checkInventory(observation, target_item)
+            self.is_get_completed = self.check_inventory(observation, target_item)
 
             if self.is_get_completed:
                 self.item_location = len(self.landmarks)
@@ -424,3 +424,20 @@ class SimpleMalmoEnvironment:
             return False
 
         return True
+
+    def check_inventory(self, observation, required):
+        # need to find a way to see if the get task has been completed. one of the ways to do it is to check the
+        # inventory, if the block has been acquired.
+        for i in xrange(0, 39):
+            key = 'InventorySlot_' + str(i) + '_item'
+            if key in observation:
+                item = observation[key]
+                if item == required:
+                    return True
+
+        return False
+
+
+def main():
+    malmo = SimpleMalmoEnvironment()
+    
