@@ -463,3 +463,6 @@ def main():
                 else:
                     action = random.choice(actions[0:3])
                 malmo.env_step(action)
+
+if __name__ == '__main__':
+    main()
