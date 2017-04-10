@@ -314,7 +314,7 @@ class SimpleMalmoEnvironment:
         for retry in range(retries):
             try:
                 malmo_env.startMission(self.mission, self.mission_record)
-                time.sleep(2.5)
+                time.sleep(8)
 
                 world_state = malmo_env.getWorldState()
                 if world_state.has_mission_begun:
@@ -335,10 +335,6 @@ class SimpleMalmoEnvironment:
             for error in world_state.errors:
                 log.error("Error: %s", error.text)
 
-        return_observation, reward, terminal = self.makeObservation()
-
-        return return_observation
-
     def env_start(self):
         log = logging.getLogger('SimpleMalmoEnvironment.envStart')
 
@@ -353,3 +349,78 @@ class SimpleMalmoEnvironment:
         log.debug("First observation: %s, %f, %d", return_observation, reward, terminal)
 
         return return_observation
+
+    def env_step(self, thisAction):
+        log = logging.getLogger('SimpleMalmoEnvironment.envStep')
+
+        log.debug("Received action: %s", thisAction)
+
+        malmo_action = self.actions[thisAction]
+
+        self.last_action = malmo_action
+
+        action_status = self.take_action(malmo_action)
+
+        obs, reward, terminal = self.makeObservation(action_status)
+
+        log.debug("Observation: %s ; reward = %f ; terminal = %d", pformat(obs), reward, terminal)
+
+        return obs, reward, terminal
+
+    def take_action(self, malmo_action):
+        log = logging.getLogger('SimpleMalmoEnvironment.takeAction')
+
+        log.debug("Action to take: %s", malmo_action)
+
+        # get the target landmark from the list
+        landmark_types = self.landmark_types
+        target_block = landmark_types[self.destination]
+
+        if "use" in malmo_action:
+            log.debug("Action to put things down")
+
+            retry_for_obs = 5
+            trial = 0
+            while trial < retry_for_obs:
+                trial += 1
+                time.sleep(0.1)
+                world_state = malmo_env.getWorldState()
+
+                for error in world_state.errors:
+                    log.error("Error: %s", error.text)
+
+                log.debug("Received: %s, Num. observations: %d", world_state, len(world_state.observations))
+
+                if world_state.is_mission_running and len(world_state.observations) > 0 \
+                        and not world_state.observations[-1].text == "{}":
+                    observation = json.loads(world_state.observations[-1].text)
+
+                    if not u'XPos' in observation or not u'ZPos' in observation or not u'Yaw' in observation \
+                            or not u'LineOfSight' in observation or not u'surroundingFloor' in observation:
+                        malmo_env.sendCommand("jump 0")
+                        log.error("Incomplete observation received: %s", pformat(observation))
+                        log.warn("Sending a noop jump 0 command to force observation")
+                    else:
+                        log.debug("Put: Got it!!: : : Observation in put: %s", pformat(observation))
+                        break
+
+            x, y = int(observation[u'XPos']), int(observation[u'ZPos'])
+            dest = self.landmarks[self.destination]
+
+            log.debug("Currently at: %d, %d", x, y)
+            log.debug("Destination: %s", dest)
+
+            if not list_compare([x, y], dest):
+                log.warn("Not correct destination, put down action failed. Get negative reward")
+                return False
+            else:
+                log.info("Can put down now [%d,%d]", x, y)
+
+        try:
+            malmo_env.sendCommand(malmo_action)
+            log.info("Action %s succeeded", malmo_action)
+        except RuntimeError as e:
+            log.error("Failed to send command %s", e)
+            return False
+
+        return True
