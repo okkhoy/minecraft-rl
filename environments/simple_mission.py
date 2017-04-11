@@ -35,6 +35,7 @@ import json
 import random
 import time
 import copy
+import os
 
 from pprint import pformat
 
@@ -442,6 +443,8 @@ class SimpleMalmoEnvironment:
 
 
 def main():
+    prepare_logger()
+    log.info('Start!')
     malmo = SimpleMalmoEnvironment()
 
     n_steps_per_ep = 500
@@ -459,6 +462,7 @@ def main():
             actions = range(len(malmo.actions))
             # loop until episode ends
             while i < n_steps_per_ep and not terminal:
+                log.debug("Run: %d; Episode: %d; Step: %d", r, e, i)
                 i += 1
                 if not malmo.is_get_completed:
                     action = random.choice(actions)
@@ -466,9 +470,26 @@ def main():
                     action = random.choice(actions[0:3])
                     obs, reward, terminal = malmo.env_step(action)
 
+
 def get_time_now():
     return time.strftime('%Y%m%d-%H%M', time.localtime())
 
+
+def prepare_logger():
+    start_time = get_time_now()
+    if not os.path.exists('log'):
+        os.makedirs('log')
+
+        logfilename = 'log/' + start_time + '.log'
+        log = logging.getLogger('SimpleMalmoEnvironment')
+        logFile = logging.FileHandler(logfilename)
+        log.setLevel('DEBUG')
+        logFile.setFormatter(
+            logging.Formatter('[%(asctime)s]: [%(filename)s:%(lineno)d:%(funcName)s]: %(levelname)s :: %(message)s',
+                              datefmt='%m-%d-%Y %H:%M:%S'))
+        log.addHandler(logFile)
+
+        log.info("Logger ready")
 
 if __name__ == '__main__':
     main()
