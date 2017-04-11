@@ -444,6 +444,7 @@ class SimpleMalmoEnvironment:
 
 def main():
     prepare_logger()
+    log = logging.getLogger('SimpleMalmoEnvironment')
     log.info('Start!')
     malmo = SimpleMalmoEnvironment()
 
@@ -455,6 +456,7 @@ def main():
         for e in xrange(n_episodes):
             # start the episode
             malmo_env.sendCommand("quit")
+            time.sleep(3)
             malmo.env_start()
 
             terminal = False
@@ -468,7 +470,7 @@ def main():
                     action = random.choice(actions)
                 else:
                     action = random.choice(actions[0:3])
-                    obs, reward, terminal = malmo.env_step(action)
+                obs, reward, terminal = malmo.env_step(action)
 
 
 def get_time_now():
@@ -480,16 +482,16 @@ def prepare_logger():
     if not os.path.exists('log'):
         os.makedirs('log')
 
-        logfilename = 'log/' + start_time + '.log'
-        log = logging.getLogger('SimpleMalmoEnvironment')
-        logFile = logging.FileHandler(logfilename)
-        log.setLevel('DEBUG')
-        logFile.setFormatter(
-            logging.Formatter('[%(asctime)s]: [%(filename)s:%(lineno)d:%(funcName)s]: %(levelname)s :: %(message)s',
-                              datefmt='%m-%d-%Y %H:%M:%S'))
-        log.addHandler(logFile)
+    logfilename = 'log/' + start_time + '.log'
+    log = logging.getLogger('SimpleMalmoEnvironment')
+    logFile = logging.FileHandler(logfilename)
+    log.setLevel('DEBUG')
+    logFile.setFormatter(
+        logging.Formatter('[%(asctime)s]: [%(filename)s:%(lineno)d:%(funcName)s]: %(levelname)s :: %(message)s',
+                          datefmt='%m-%d-%Y %H:%M:%S'))
+    log.addHandler(logFile)
 
-        log.info("Logger ready")
+    log.info("Logger ready")
 
 if __name__ == '__main__':
     main()
