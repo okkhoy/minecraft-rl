@@ -466,5 +466,9 @@ def main():
                     action = random.choice(actions[0:3])
                     obs, reward, terminal = malmo.env_step(action)
 
+def get_time_now():
+    return time.strftime('%Y%m%d-%H%M', time.localtime())
+
+
 if __name__ == '__main__':
     main()
