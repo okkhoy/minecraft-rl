@@ -248,7 +248,7 @@ class SimpleMalmoEnvironment:
 
         if not world_state.is_mission_running:
             terminal = 1
-            return_observation = []
+            return_observation = {}
             log.warn("Malmo mission ended")
 
         current_r = 0
