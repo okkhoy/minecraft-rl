@@ -99,7 +99,7 @@ class SimpleMalmoEnvironment:
                     self.size[1]) + '''" type="sandstone" />      <!-- floor of the arena -->
                     ''' + self.draw_landmarks() + self.draw_obstacles() + '''
                 </DrawingDecorator>
-                <ServerQuitFromTimeUp timeLimitMs="720000"/>
+                <ServerQuitFromTimeUp timeLimitMs="50000"/>
                 <ServerQuitWhenAnyAgentFinishes/>
                 </ServerHandlers>
             </ServerSection>
@@ -143,7 +143,7 @@ class SimpleMalmoEnvironment:
         for i, l in enumerate(landmarks):
             x, z = l
             landmark_xml += '''<DrawBlock x="''' + str(x) + '''" y="45" z="''' + str(z) + '''" type="''' + \
-                            self.landmark_types[i % len(self.landmark_typesn)] + '''"/>'''
+                            self.landmark_types[i % len(self.landmark_types)] + '''"/>'''
 
         return landmark_xml
 
@@ -247,38 +247,40 @@ class SimpleMalmoEnvironment:
 
         if not world_state.is_mission_running:
             terminal = 1
+            return_observation = []
             log.warn("Malmo mission ended")
 
         current_r = 0
         for reward in world_state.rewards:
             current_r += reward.getValue()
 
-        log.debug("Received world state: %s", world_state)
-        log.debug("Received observation %s", pformat(observation))
+        if world_state.is_mission_running:
+            log.debug("Received world state: %s", world_state)
+            log.debug("Received observation %s", pformat(observation))
 
-        x, y = int(observation[u'XPos']), int(observation[u'ZPos'])
-        self.direction = int(observation[u'Yaw'])/90
+            x, y = int(observation[u'XPos']), int(observation[u'ZPos'])
+            self.direction = int(observation[u'Yaw'])/90
 
-        if not self.is_get_completed:
-            self.is_get_completed = self.check_inventory(observation, target_item)
+            if not self.is_get_completed:
+                self.is_get_completed = self.check_inventory(observation, target_item)
 
-            if self.is_get_completed:
-                self.item_location = len(self.landmarks)
-                current_r += 11
-                log.debug("Get successfully completed")
-        elif self.is_get_completed:
-            if "use" in self.last_action:
-                if action_status is True:
-                    current_r += 21
-                    log.debug("Put successfully completed")
-                    terminal = 1
-                else:
-                    current_r -= 10
-                    log.debug("Put failed")
+                if self.is_get_completed:
+                    self.item_location = len(self.landmarks)
+                    current_r += 11
+                    log.debug("Get successfully completed")
+            elif self.is_get_completed:
+                if "use" in self.last_action:
+                    if action_status is True:
+                        current_r += 21
+                        log.debug("Put successfully completed")
+                        terminal = 1
+                    else:
+                        current_r -= 10
+                        log.debug("Put failed")
 
-        distance = float(observation[u'LineOfSight'][u'distance'])
-        return_observation = {"intobs": [x, y, self.direction, self.item_location, self.destination],
-                              "floatobs": [distance]}
+            distance = float(observation[u'LineOfSight'][u'distance'])
+            return_observation = {"intobs": [x, y, self.direction, self.item_location, self.destination],
+                                  "floatobs": [distance]}
 
         return return_observation, current_r, terminal
 
@@ -442,7 +444,7 @@ class SimpleMalmoEnvironment:
 def main():
     malmo = SimpleMalmoEnvironment()
 
-    n_steps_per_ep = 1500
+    n_steps_per_ep = 500
     n_episodes = 100
     n_runs = 10
 
@@ -462,7 +464,7 @@ def main():
                     action = random.choice(actions)
                 else:
                     action = random.choice(actions[0:3])
-                malmo.env_step(action)
+                    obs, reward, terminal = malmo.env_step(action)
 
 if __name__ == '__main__':
     main()
