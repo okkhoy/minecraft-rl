@@ -60,13 +60,6 @@ class SimpleMalmoEnvironment:
         self.landmarks = [[1, 2], [2, 5], [5, 6], [5, 2]]
         self.obstacles = [[2, 2, 2], [3, 2, 2], [3, 3, 2], [4, 3, 2], [1, 4, 2], [2, 5, 2], [2, 6, 2]]
 
-        # mission related objects
-        self.mission_xml = self.generate_malmo_environment_xml()
-        log.debug("Obtained mission XML: \n %s", self.mission_xml)
-        self.mission_record = MalmoPython.MissionRecordSpec()
-        self.mission = MalmoPython.MissionSpec(self.mission_xml, True)
-        log.info("Loaded mission XML")
-
         # observation stuff that needs to be passed to the learning algorithm
         self.item_location = 0
         self.current_agent_location = []
@@ -75,6 +68,11 @@ class SimpleMalmoEnvironment:
         self.last_action = ""
         self.direction = 0
         self.is_get_completed = False
+
+        # malmo objects
+        self.mission_xml = ""
+        self.mission_record = None
+        self.mission = None
 
         log.debug("Verify experiment config:\n%s", pformat(self.__dict__))
 
@@ -291,6 +289,14 @@ class SimpleMalmoEnvironment:
         obstacle_locations = [[l[0], l[1]] for l in self.obstacles]
         landmark_locations = [[l[0], l[1]] for l in self.landmarks]
 
+        del self.mission  # just to be sure, i create a new mission every episode
+        # mission related objects
+        self.mission_xml = self.generate_malmo_environment_xml()
+        log.debug("Obtained mission XML: \n %s", self.mission_xml)
+        self.mission_record = MalmoPython.MissionRecordSpec()
+        self.mission = MalmoPython.MissionSpec(self.mission_xml, True)
+        log.info("Loaded mission XML")
+
         # select a random start location such that is is not one of the wall cells and not one of landmarks
         # x, y = random.randint(0, self.size[0] - 1), random.randint(0, self.size[1] - 1)
         # while [x, y] in obstacle_locations or [x, y] in landmark_locations:
@@ -305,8 +311,9 @@ class SimpleMalmoEnvironment:
         destination = random.choice(remaining_landmarks)  # now randomly choose the destination from above list
         agent_start_loc = random.choice(remaining_landmarks)  # start locations for agent; start loc != pick up source
         x, y = agent_start_loc[0], agent_start_loc[1]
-        self.mission.startAt(x, 46, y)
         self.current_agent_location = [x, y]
+        # malmo needs locations to be 0.5 to be in the middle of the square, else, it is at the edge
+        self.mission.startAt(x + 0.5, 46, y + 0.5)
 
         self.item_location = landmarks.index(source_loc)
         self.destination = landmarks.index(destination)
@@ -318,7 +325,7 @@ class SimpleMalmoEnvironment:
         for retry in range(retries):
             try:
                 malmo_env.startMission(self.mission, self.mission_record)
-                time.sleep(8)
+                time.sleep(10)
 
                 world_state = malmo_env.getWorldState()
                 if world_state.has_mission_begun:
@@ -328,7 +335,7 @@ class SimpleMalmoEnvironment:
                     log.error("Error starting mission. Max retries elapsed. Closing! %s", e.message)
                     exit(1)
                 else:
-                    time.sleep(2.5)
+                    time.sleep(10)
 
         world_state = malmo_env.getWorldState()
 
@@ -455,8 +462,6 @@ def main():
     for r in xrange(n_runs):
         for e in xrange(n_episodes):
             # start the episode
-            malmo_env.sendCommand("quit")
-            time.sleep(3)
             malmo.env_start()
 
             terminal = False
