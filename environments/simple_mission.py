@@ -407,7 +407,7 @@ class SimpleMalmoEnvironment:
                     observation = json.loads(world_state.observations[-1].text)
 
                     if not u'XPos' in observation or not u'ZPos' in observation or not u'Yaw' in observation \
-                            or not u'LineOfSight' in observation or not u'surroundingFloor' in observation:
+                            or not u'LineOfSight' in observation:
                         malmo_env.sendCommand("jump 0")
                         log.error("Incomplete observation received: %s", pformat(observation))
                         log.warn("Sending a noop jump 0 command to force observation")
