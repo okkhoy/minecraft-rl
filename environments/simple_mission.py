@@ -105,7 +105,6 @@ class SimpleMalmoEnvironment:
             <AgentSection mode="Survival">
                 <Name>ButterFingers</Name>
                 <AgentStart>
-                    <Placement x="4" y="46.0" z="2" pitch="15" yaw="0"/>
                     <Inventory>
                     </Inventory>
                 </AgentStart>
