@@ -320,7 +320,7 @@ class SimpleMalmoEnvironment:
         self.mission.drawItem(source_loc[0], 47, source_loc[1], self.landmark_types[self.destination])
 
         retries = 3
-        log.debug("Mission XML: \n %s", self.mission_xml)
+        log.debug("Final Mission XML sent to Malmo: \n %s", self.mission.getAsXML(True))
         for retry in range(retries):
             try:
                 malmo_env.startMission(self.mission, self.mission_record)
