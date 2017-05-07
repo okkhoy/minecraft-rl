@@ -70,3 +70,11 @@ class Softmax:
         """
         self.counts = [0 for col in xrange(n_arms)]
         self.values = [0.0 for col in xrange(n_arms)]
+
+    def select_arm(self):
+        """
+        :return: the index of the arm to be pulled (action to be performed)
+        """
+        z = sum([math.exp(v/self.temperature) for v in self.values])
+        probs = [math.exp(v/self.temperature)/z for v in self.values]
+        return categorical_draws(probs)
