@@ -78,6 +78,7 @@ class BernoulliEnv(Environment):
 
         return ts.toTaskSpec()
 
+
 def test():
     b_env = BernoulliEnv([0.1, 0.2, 0.6, 0.1])
     print "Arms: ", b_env.arms
