@@ -60,6 +60,23 @@ class EpsilonGreedy():
         else:
             random.randrange(len(self.values))
 
+    def update(self, chosen_arm, reward):
+        """
+        Increments count of the chosen arm.
+        Determines the current estimated value of the chosen arm.
+            Updates the estimated value of the chosen arm to be a weighted average of the
+            previously estimated value and the reward just received.
+            Update rule actually counts the running average
+        :param chosen_arm: arm that was selected to be pulled (action to be performed)
+        :param reward: numerical value obtained for performing the action
+        """
+        self.counts[chosen_arm] += 1
+        n = self.counts[chosen_arm]
+
+        value = self.values[chosen_arm]
+        new_value = ((n-1)/float(n)) * value + (1/float(n)) * reward
+        self.values[chosen_arm] = new_value
+
 
 def index_max(x):
     """
