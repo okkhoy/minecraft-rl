@@ -29,6 +29,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+import math
+
+
+class UCB1:
+    def __init__(self, counts, values):
+        self.counts = counts
+        self.vaues = values
+
+    def initialize(self, n_arms):
+        self.counts = [0 for col in xrange(n_arms)]
+        self.values = [0.0 for col in xrange(n_arms)]
+
 
 def index_max(x):
     """
