@@ -95,3 +95,30 @@ class Softmax:
         value = self.values[chosen_arm]
         new_value = ((n-1)/float(n)) * value + (1/float(n)) * reward
         self.values[chosen_arm] = new_value
+
+
+class AnnealingSoftMax(Softmax):
+    """
+    To encourage an algorithm to explore less over time, we can slowly decrease the temperature.
+    This process is called annealing. It is done as follows: Decreasing the temperature by changing the
+    temperature parameter will make Softmax algorithm exploit the best arm more often and settle into 
+    its final deterministic strategy for choosing an arm.
+    """
+    def __init__(self, counts, values):
+        super(AnnealingSoftMax, self).__init__(0, counts, values)
+
+    def select_arm(self):
+        """
+        First set the temperature to be annealing temperature as 1/log(counts + 0.000001)
+            Using this temperature, calculate the probabilities and do a categorical draw.
+            When t = 1, temperature = 1 / math.log(1.000001), very close to being infinite.
+            Hence, temperature is extremely high and the system will explore almost completely randomly.
+            As t goes up, the temperature will get lower and lower.
+        :return: the index of the arm to be pulled (action to be performed)
+        """
+        t = sum(self.counts) + 1
+        self.temperature = 1/math.log(t + 0.000001)
+
+        z = sum([math.exp(v / self.temperature) for v in self.values])
+        probs = [math.exp(v / self.temperature) / z for v in self.values]
+        return categorical_draws(probs)
