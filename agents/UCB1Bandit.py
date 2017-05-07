@@ -55,14 +55,19 @@ class UCB1:
         n_arms = len(self.counts)
 
         for arm in xrange(n_arms):
-            if self.counts[arm] == 0:
+            if self.counts[arm] == 0:  # ensure that every arm is played at least once
                 return arm
+
+        # if number of trials is less than the number of arms, then each arm may never be
+        # tried out before making the optimal decision.
 
         ucb_values = [0.0 for arm in xrange(n_arms)]
         total_counts = sum(self.counts)
 
         for arm in xrange(n_arms):
             bonus = math.sqrt((2 * math.log(total_counts)) / float(self.counts[arm]))
+            # a measure of how much less we know; when counts[arm] is low, the fraction becomes
+            # large; hence the bonus value is high. index max below selects arm with highest value
             ucb_values[arm] = self.values[arm] + bonus
 
         return index_max(ucb_values)
