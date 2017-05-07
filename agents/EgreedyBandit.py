@@ -51,19 +51,20 @@ class EpsilonGreedy():
         self.counts = [0 for col in xrange(n_arms)]
         self.values = [0.0 for col in xrange(n_arms)]
 
-    def index_max(self, x):
-        """
-        :param x: vector whose max index has to be returned 
-        :return: index of the max element in x
-        """
-        m = max(x)
-        return x.index(m)
-
     def select_arm(self):
         """
         :return: the index of the arm to be pulled (action to be performed)
         """
         if random.random() > self.epsilon:
-            return self.index_max(self.values)
+            return index_max(self.values)
         else:
             random.randrange(len(self.values))
+
+
+def index_max(x):
+    """
+    :param x: vector whose max index has to be returned 
+    :return: index of the max element in x
+    """
+    m = max(x)
+    return x.index(m)
