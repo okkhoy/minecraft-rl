@@ -31,6 +31,14 @@ THE SOFTWARE.
 
 import random
 
+from rlglue.environment.Environment import Environment
+from rlglue.environment import EnvironmentLoader as EnvironmentLoader
+from rlglue.types import Observation
+from rlglue.types import Action
+from rlglue.types import Reward_observation_terminal
+from rlglue import TaskSpecRLGlue
+from rlglue.registry import register_environment
+
 
 class BernoulliArm:
 
