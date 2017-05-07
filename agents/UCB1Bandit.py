@@ -34,14 +34,24 @@ import math
 
 class UCB1:
     def __init__(self, counts, values):
+        """ 
+        :param counts: vector of length N that tells how many times we played each of N arms
+        :param values: vector of length N that tells the average amount of rewards obtained playing each of N arms
+        """
         self.counts = counts
         self.vaues = values
 
     def initialize(self, n_arms):
+        """
+        :param n_arms: tells the number of arms (or actions) in the problem 
+        """
         self.counts = [0 for col in xrange(n_arms)]
         self.values = [0.0 for col in xrange(n_arms)]
 
     def select_arm(self):
+        """
+        :return: the index of the arm to be pulled (action to be performed)
+        """
         n_arms = len(self.counts)
 
         for arm in xrange(n_arms):
@@ -58,6 +68,15 @@ class UCB1:
         return index_max(ucb_values)
 
     def update(self, chosen_arm, reward):
+        """
+        Increments count of the chosen arm.
+        Determines the current estimated value of the chosen arm.
+            Updates the estimated value of the chosen arm to be a weighted average of the
+            previously estimated value and the reward just received.
+            Update rule actually counts the running average
+        :param chosen_arm: arm that was selected to be pulled (action to be performed)
+        :param reward: numerical value obtained for performing the action
+        """
         self.counts[chosen_arm] += 1
         n = self.counts[chosen_arm]
 
