@@ -32,7 +32,8 @@ THE SOFTWARE.
 import numpy as np
 import random
 
-class EpsilonGreedy():
+
+class EpsilonGreedy:
 
     def __init__(self, epsilon, counts, values):
         """
