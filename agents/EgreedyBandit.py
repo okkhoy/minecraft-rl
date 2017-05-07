@@ -28,3 +28,42 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+
+import numpy as np
+import random
+
+class EpsilonGreedy():
+
+    def __init__(self, epsilon, counts, values):
+        """
+        :param epsilon: tells the probability with which we explore 
+        :param counts: vector of length N that tells how many times we played each of N arms
+        :param values: vector of length N that tells the average amount of rewards obtained playing each of N arms
+        """
+        self.epsilon = epsilon
+        self.counts = counts
+        self.values = values
+
+    def initialize(self, n_arms):
+        """
+        :param n_arms: tells the number of arms (or actions) in the problem 
+        """
+        self.counts = [0 for col in xrange(n_arms)]
+        self.values = [0.0 for col in xrange(n_arms)]
+
+    def index_max(self, x):
+        """
+        :param x: vector whose max index has to be returned 
+        :return: index of the max element in x
+        """
+        m = max(x)
+        return x.index(m)
+
+    def select_arm(self):
+        """
+        :return: the index of the arm to be pulled (action to be performed)
+        """
+        if random.random() > self.epsilon:
+            return self.index_max(self.values)
+        else:
+            random.randrange(len(self.values))
