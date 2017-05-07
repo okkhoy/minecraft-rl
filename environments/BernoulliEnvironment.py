@@ -59,11 +59,27 @@ class BernoulliArm:
             return 1.0
 
 
+@register_environment
+class BernoulliEnv(Environment):
+    name = "Bernoulli Random Environment"
+
+    def __init__(self, means=None):
+        self.means = [0.1, 0.2, 0.6, 0.1]  # probabilities with which each arm emits a reward 1
+        self.n_arms = len(self.means)
+        random.shuffle(self.means)
+        self.arms = map(lambda mu: BernoulliArm(mu), self.means)
+
+    def makeTaskSpec(self):
+        ts = TaskSpecRLGlue.TaskSpec(discount_factor=0.9, reward_range=(0.0, 1.0))
+        ts.addDiscreteAction((0, len(self.means)-1))
+        ts.addDiscreteObservation((0, 1))
+        ts.setEpisodic()
+        ts.setExtra(self.name)
+
+        return ts.toTaskSpec()
+
 def test():
-    means = [0.1, 0.2, 0.6, 0.1]  # probabilities with which each arm emits a reward 1
-    n_arms = len(means)
-    random.shuffle(means)
-    arms = map(lambda mu: BernoulliArm(mu), means)
-    print "Arms: ", arms
-    for a in arms:
+    b_env = BernoulliEnv([0.1, 0.2, 0.6, 0.1])
+    print "Arms: ", b_env.arms
+    for a in b_env.arms:
         a.draw()
