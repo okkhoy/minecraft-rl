@@ -35,10 +35,27 @@ import random
 class BernoulliArm:
 
     def __init__(self, p):
+        """
+        Implements a simple random reward generator
+        :param p: the probability with which the arm associated returns 1 as reward
+        """
         self.p = p
 
     def draw(self):
+        """
+        Returns reward 1 with probability p
+        """
         if random.random() > self.p:
             return 0.0
         else:
             return 1.0
+
+
+def test():
+    means = [0.1, 0.2, 0.6, 0.1]  # probabilities with which each arm emits a reward 1
+    n_arms = len(means)
+    random.shuffle(means)
+    arms = map(lambda mu: BernoulliArm(mu), means)
+    print "Arms: ", arms
+    for a in arms:
+        a.draw()
