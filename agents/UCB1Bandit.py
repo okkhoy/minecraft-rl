@@ -57,6 +57,14 @@ class UCB1:
 
         return index_max(ucb_values)
 
+    def update(self, chosen_arm, reward):
+        self.counts[chosen_arm] += 1
+        n = self.counts[chosen_arm]
+
+        value = self.values[chosen_arm]
+        new_value = ((n-1)/float(n)) * value + (1/float(n)) * reward
+        self.values[chosen_arm] = new_value
+
 
 def index_max(x):
     """
@@ -65,4 +73,3 @@ def index_max(x):
     """
     m = max(x)
     return x.index(m)
-
