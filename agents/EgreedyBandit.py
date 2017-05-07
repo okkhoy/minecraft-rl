@@ -92,3 +92,8 @@ def index_max(x):
     """
     m = max(x)
     return x.index(m)
+
+
+def test():
+    algo = EpsilonGreedy(1.0, [])
+    algo.initialize(2)
