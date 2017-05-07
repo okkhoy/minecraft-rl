@@ -41,6 +41,22 @@ class UCB1:
         self.counts = [0 for col in xrange(n_arms)]
         self.values = [0.0 for col in xrange(n_arms)]
 
+    def select_arm(self):
+        n_arms = len(self.counts)
+
+        for arm in xrange(n_arms):
+            if self.counts[arm] == 0:
+                return arm
+
+        ucb_values = [0.0 for arm in xrange(n_arms)]
+        total_counts = sum(self.counts)
+
+        for arm in xrange(n_arms):
+            bonus = math.sqrt((2 * math.log(total_counts)) / float(self.counts[arm]))
+            ucb_values[arm] = self.values[arm] + bonus
+
+        return index_max(ucb_values)
+
 
 def index_max(x):
     """
