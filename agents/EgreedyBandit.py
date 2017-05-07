@@ -51,6 +51,13 @@ class EpsilonGreedy():
         self.counts = [0 for col in xrange(n_arms)]
         self.values = [0.0 for col in xrange(n_arms)]
 
+    def set_epsilon(self, epsilon):
+        """
+        Setter method
+        :param epsilon: the value of epsilon to be set for this instance of the algorithm
+        """
+        self.epsilon = epsilon
+
     def select_arm(self):
         """
         :return: the index of the arm to be pulled (action to be performed)
