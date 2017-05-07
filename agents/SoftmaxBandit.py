@@ -47,12 +47,26 @@ def categorical_draws(probabilities):
 
 
 class Softmax:
+    """
+    Provides structured exploration. Tries to cope with the arms differing in estimated value by incorporating
+    information about reward rates of the available arms while choosing the arms. This is done via exponential
+    rescaling.
+    """
 
     def __init__(self, temperature, counts, values):
+        """
+        When temperature is high, the randomness is high via: -exp(prob/temp)
+        :param temperature: parameter that controls the randomness of the softmax function
+        :param counts: vector of length N that tells how many times we played each of N arms
+        :param values: vector of length N that tells the average amount of rewards obtained playing each of N arms
+        """
         self.temperature = temperature
         self.counts = counts
         self.values = values
 
     def initialize(self, n_arms):
+        """
+        :param n_arms: tells the number of arms (or actions) in the problem 
+        """
         self.counts = [0 for col in xrange(n_arms)]
         self.values = [0.0 for col in xrange(n_arms)]
