@@ -53,7 +53,9 @@ from pyrl.rlglue.registry import register_environment
 malmo_env = MalmoPython.AgentHost()
 list_compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
 
+@register_environment
 class SimpleMalmoEnvironment:
+	name = 'SimpleMalmoEnvironment'
 
     def __init__(self):
         log = logging.getLogger('SimpleMalmoEnvironment.init')
