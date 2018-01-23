@@ -22,6 +22,7 @@ from pyrl.environments import *
 from pyrl.experiments import *
 from pyrl.rlglue.registry import rlglue_registry
 from pyrl.misc.json import convert
+from pyrl.rlglue.myConfig import myConfig
 
 from rlglue.agent import AgentLoader as AgentLoader
 from rlglue.environment import EnvironmentLoader as EnvironmentLoader
@@ -161,27 +162,28 @@ def addRunExpArgs(parser):
 
 
 def prepare_logger():
-    logconfig = json.load(open("logconfig.json", 'r'))
-    start_time = get_time_now()
-    if not os.path.exists(logconfig['logfolder']):
-        os.makedirs(logconfig['logfolder'])
-    logfilename = logconfig['logfolder'] + "/" + start_time + ".log"
+    
+    myConfig.logconfig = json.load(open("logconfig.json", 'r'))
+    myConfig.start_time = get_time_now()
+    if not os.path.exists(myConfig.logconfig['logfolder']):
+        os.makedirs(myConfig.logconfig['logfolder'])
+    logfilename = myConfig.logconfig['logfolder'] + "/" + myConfig.start_time + ".log"
     
     log = logging.getLogger('pyrl')
     logFile = logging.FileHandler(logfilename)
-    log.setLevel(logconfig['loglevel'])
+    log.setLevel(myConfig.logconfig['loglevel'])
     logFile.setFormatter(logging.Formatter('[%(asctime)s]: [%(filename)s:%(lineno)d:%(funcName)s]: %(levelname)s :: %(message)s', datefmt='%m-%d-%Y %H:%M:%S'))
     log.addHandler(logFile)
     
-    #print logconfig['enabled']
-    if logconfig['enabled'] == False:
+    #print myConfig.logconfig['enabled']
+    if myConfig.logconfig['enabled'] == False:
         log.info("Logging disabled. No more logs will be generated")
         logging.disable(logging.CRITICAL)
     
-    log.info("New run: %s", start_time)
+    log.info("New run: %s", myConfig.start_time)
     log.debug("Log configuration:")
     log.debug("Log file: %s", logfilename)
-    log.debug("Log level: %s", logconfig['loglevel'])
+    log.debug("Log level: %s", myConfig.logconfig['loglevel'])
     log.debug("Log format: %s", '[\%(asctime)s]: [\%(filename)s:\%(lineno)d:\%(funcName)s]: \\\\n\\\\t \%(levelname)s :: \%(message)s')
     log.info("Logger ready")
     
