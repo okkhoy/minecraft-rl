@@ -219,6 +219,19 @@ if __name__ == '__main__':
     else:
         log.info("Config file specified")
         config = fromjson(args.load)
-        log.debug("Parsed config: %s", tojson(*config))
+        log.info("Parsed config: %s", tojson(*config))
         #print "Parsed Config: \n", config, "\n"
-        run(*config, local=args.local, result_file=args.output)
+        config_dict = json.loads(tojson(*config))
+        op_agent_name = config_dict['agent']['name'].replace(" ", "")
+        op_env_name = config_dict['environment']['name'].replace(" ", "")
+
+        dumpPath = myConfig.logconfig['outputfolder'] + "/" + myConfig.start_time
+        if not os.path.exists(dumpPath):
+            os.makedirs(dumpPath)
+
+        dumpFilePrefix = dumpPath + "/"
+
+        output_filename = dumpFilePrefix + op_agent_name + "-" + \
+                          op_env_name + "-" + myConfig.start_time + ".txt"
+
+        run(*config, local=args.local, result_file=output_filename)  #args.output)
