@@ -119,7 +119,6 @@ def run(agent, a_args, env, env_args, exp, exp_args, local=None, result_file=Non
     config = {'agent': {'name': agent.name, 'params': a_args},
               'environment': {'name': env.name, 'params': env_args},
               'experiment': {'name': exp.name, 'params': exp_args}}
-    #print "run method:\n", config, "\n"
     
     log.debug("Agent config: %s", config['agent'])
     log.debug("Environment config: %s", config['environment'])
@@ -175,7 +174,6 @@ def prepare_logger():
     logFile.setFormatter(logging.Formatter('[%(asctime)s]: [%(filename)s:%(lineno)d:%(funcName)s]: %(levelname)s :: %(message)s', datefmt='%m-%d-%Y %H:%M:%S'))
     log.addHandler(logFile)
     
-    #print myConfig.logconfig['enabled']
     if myConfig.logconfig['enabled'] == False:
         log.info("Logging disabled. No more logs will be generated")
         logging.disable(logging.CRITICAL)
@@ -204,23 +202,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run a reinforcement learning experiment. Defaults to interactive experiment.')
     addRunExpArgs(parser)
     args = parser.parse_args()
-    # print "Main:\n",  args, "\n"
     if args.load is None:
         log.info("No config file. Reading input from user")
         config = fromuser()
         if args.genjson:
             print (tojson(*config))
-            #log.info("Writing configuration to json file. Config: %s", '; '.join("%s=%r" % (key,val) for (key,val) in config.iteritems()))
             log.debug("Writing configuration to json file. Config: %s", tojson(*config))
         else:
-            #log.info("Starting experiment with user specified input. Config: %s", '; '.join("%s=%r" % (key,val) for (key,val) in config.iteritems()))
             log.debug("Running with user input. Config: %s", tojson(*config))
             run(*config,local=args.local, result_file=args.output)
     else:
         log.info("Config file specified")
         config = fromjson(args.load)
         log.info("Parsed config: %s", tojson(*config))
-        #print "Parsed Config: \n", config, "\n"
         config_dict = json.loads(tojson(*config))
         op_agent_name = config_dict['agent']['name'].replace(" ", "")
         op_env_name = config_dict['environment']['name'].replace(" ", "")
@@ -234,4 +228,4 @@ if __name__ == '__main__':
         output_filename = dumpFilePrefix + op_agent_name + "-" + \
                           op_env_name + "-" + myConfig.start_time + ".txt"
 
-        run(*config, local=args.local, result_file=output_filename)  #args.output)
+        run(*config, local=args.local, result_file=output_filename)
