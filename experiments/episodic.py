@@ -1,6 +1,7 @@
 
 # Author: Will Dabney
 # Author: Pierre-Luc Bacon <pierrelucbacon@gmail.com>
+from __future__ import print_function
 
 import csv, os
 import logging
@@ -76,12 +77,12 @@ class Episodic(object):
         for i in range(self.num_episodes):
             term, steps, reward, runtime = self.run_episode()
             if filename is None:
-                print i, reward
+                print(i, reward)
             else:
                 with open(filename, "a") as f:
                     csvwrite = csv.writer(f)
                     csvwrite.writerow([i, reward])
-                    print i, reward
+                    print(i, reward)
             log.info("Episode: %d, reward: %f, steps: %d, termination: %d", i, reward, steps, term)
             log.debug("Episode: %d  Reward: %f  Num steps: %d  Terminate: %d  Run time: %d", i, reward, steps, term, runtime)
         self.rlglue.RL_cleanup()
@@ -91,10 +92,10 @@ class Episodic(object):
         
         if filename is None:
             log.info("No file name given. Writing results to console")
-            print 'trial, reward'
+            print('trial, reward')
         for run in range(self.num_runs):
             log.debug("Run: %d", run)
-            print "Run:", run, "rewards"
+            print("Run:", run, "rewards")
             with open(filename, "a") as f:
                 csvwrite = csv.writer(f)
                 run_id = "Run: " + str(run)
