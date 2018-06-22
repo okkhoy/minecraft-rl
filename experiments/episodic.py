@@ -76,13 +76,10 @@ class Episodic(object):
         for i in range(self.num_episodes):
             term, steps, reward, runtime = self.run_episode()
             if filename is None:
-                #print i, ',', steps, ',', runtime, ',', reward, ',', term
-                #print str(i)+','+str(reward)
                 print i, reward
             else:
                 with open(filename, "a") as f:
                     csvwrite = csv.writer(f)
-                    #csvwrite.writerow([i, steps, runtime, reward, term])
                     csvwrite.writerow([i, reward])
                     print i, reward
             log.info("Episode: %d, reward: %f, steps: %d, termination: %d", i, reward, steps, term)
@@ -95,7 +92,6 @@ class Episodic(object):
         if filename is None:
             log.info("No file name given. Writing results to console")
             print 'trial, reward'
-            #print 'trial, number of steps, runtime, accumulated reward, termination'
         for run in range(self.num_runs):
             log.debug("Run: %d", run)
             print "Run:", run, "rewards"
