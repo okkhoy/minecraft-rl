@@ -23,7 +23,7 @@
         - Run `make install`
     - Test by calling `rl_glue`
     - Output should be something like:
-    > ```$ rl_glue
+    > ```\$ rl_glue
     >     RL-Glue Version 3.04, Build 909
     >     RL-Glue is listening for connections on port=4096
     >  ```
