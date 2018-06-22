@@ -17,12 +17,12 @@ import os
 from multiprocessing import Process
 from subprocess import Popen
 
-from pyrl.agents import *
-from pyrl.environments import *
-from pyrl.experiments import *
-from pyrl.rlglue.registry import rlglue_registry
-from pyrl.misc.json import convert
-from pyrl.rlglue.myConfig import myConfig
+from agents import *
+from environments import *
+from experiments import *
+from mcrl.registry import rlglue_registry
+from misc.json import convert
+from mcrl.myConfig import myConfig
 
 from rlglue.agent import AgentLoader as AgentLoader
 from rlglue.environment import EnvironmentLoader as EnvironmentLoader
