@@ -5,10 +5,10 @@
 import csv, os
 import logging
 
-from pyrl.misc.timer import Timer
-from pyrl.rlglue import RLGlueLocal as RLGlueLocal
-from pyrl.rlglue.registry import register_experiment
-#import pyrl.visualizers.plotExperiment as plotExperiment
+from misc.timer import Timer
+from mcrl import RLGlueLocal as RLGlueLocal
+from mcrl.registry import register_experiment
+
 import rlglue.RLGlue as rl_glue
 
 
